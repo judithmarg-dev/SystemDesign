@@ -1,2 +1,4 @@
 export * from './Paper';
 export * from './Card';
+export * from './Accordion';
+export * from './AppBar';

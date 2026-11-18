@@ -6,16 +6,17 @@
   "license": "MIT",
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
-  "main": "./dist/mochi-ui.cjs",
-  "module": "./dist/mochi-ui.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/mochi-ui.js",
-      "require": "./dist/mochi-ui.cjs"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
     }
   },
   "scripts": {
@@ -25,7 +26,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build"
   },
   "peerDependencies": {
     "@emotion/react": "^11.0.0",
@@ -53,5 +55,17 @@
     "vite": "^8.3.8",
     "vite-plugin-dts": "^5.1.2",
     "vitest": "^5.1.0"
+  },
+  "keywords": [
+    "react",
+    "design-system",
+    "components",
+    "glassmorphism",
+    "emotion",
+    "ui"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/judithmarg-dev/SystemDesign.git"
   }
 }

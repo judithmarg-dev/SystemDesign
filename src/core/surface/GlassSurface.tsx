@@ -40,6 +40,8 @@ export interface GlassSurfaceProps extends HTMLAttributes<HTMLDivElement>, SxPro
   radius?: RadiusName;
   /** Tints the glass with a palette color. */
   tone?: ColorName;
+  /** Element rendered as the root, e.g. `header` or `section` for a landmark. */
+  component?: 'div' | 'header' | 'footer' | 'section' | 'aside' | 'nav' | 'article';
 }
 
 const PEEK_SIZE: Record<Size, number> = { sm: 56, md: 80, lg: 112 };
@@ -249,6 +251,7 @@ export const GlassSurface = forwardRef<HTMLDivElement, GlassSurfaceProps>(functi
     elevation = 2,
     radius = 'lg',
     tone,
+    component,
     children,
     ...rest
   },
@@ -267,7 +270,7 @@ export const GlassSurface = forwardRef<HTMLDivElement, GlassSurfaceProps>(functi
   const slot = { $size: peekSize, $line: definition?.peekLine ?? 0, $placement: characterPlacement, $radius: radius };
 
   return (
-    <Root ref={mergeRefs(ref, rootRef)} $radius={radius} {...rest}>
+    <Root ref={mergeRefs(ref, rootRef)} as={component} $radius={radius} {...rest}>
       {isPeek && (
         <PeekSlot {...slot} aria-hidden>
           <PeekHead>
