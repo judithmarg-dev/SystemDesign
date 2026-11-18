@@ -33,6 +33,26 @@ export function App() {
 `ThemeProvider` es obligatorio: los componentes leen todos sus valores del tema. La tipografía por defecto es
 [Nunito](https://fonts.google.com/specimen/Nunito); cárgala en tu app (el sistema no la descarga por ti).
 
+## Instalación
+
+```bash
+pnpm add mochi-ui react react-dom @emotion/react @emotion/styled
+```
+
+`react`, `react-dom` (18 o 19), `@emotion/react` y `@emotion/styled` son *peer dependencies*: las instala tu app y no se
+duplican. El paquete trae ESM y CJS, un archivo por módulo, así que tu bundler descarta los componentes que no importas.
+
+En tu app:
+
+1. Envuelve todo en `ThemeProvider` (y añade `CssBaseline` para el fondo que el vidrio difumina).
+2. Carga la fuente Nunito, por ejemplo en el `<head>`:
+
+   ```html
+   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+   ```
+
+Nada más: los personajes son SVG dentro del código.
+
 ## Scripts
 
 | Comando | Qué hace |
@@ -41,7 +61,8 @@ export function App() {
 | `pnpm test` | Tests con Vitest + Testing Library |
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm build` | Bundle de librería (ESM + CJS + tipos) en `dist/` |
-| `pnpm build-storybook` | Storybook estático |
+| `pnpm build-storybook` | Storybook estático (la documentación; empieza en *Getting started*) |
+| `pnpm pack` | Genera `mochi-ui-<versión>.tgz` para probarlo en otra app (`pnpm add ../ruta/mochi-ui-0.1.0.tgz`) |
 
 ## Arquitectura
 
@@ -99,7 +120,7 @@ Modos: `light` ("día de otoño") y `dark` ("noche acogedora").
 `bear`, `squirrel`, `hedgehog`, `mushroom`, `acorn`, `apple`, más las decoraciones `Leaf` y `Flower`.
 Son SVG originales dibujados para este sistema.
 
-Los componentes basados en `GlassSurface` (Paper, Card, Modal, Alert, Menu…) aceptan:
+Los componentes basados en `GlassSurface` (Paper, Card, Accordion, AppBar, Modal, Alert, Menu…) aceptan:
 
 | Prop | Valores | |
 | --- | --- | --- |
@@ -109,6 +130,12 @@ Los componentes basados en `GlassSurface` (Paper, Card, Modal, Alert, Menu…) a
 | `characterSize` | `sm` · `md` · `lg` | |
 | `mood` | `neutral` · `happy` · `sleepy` · `surprised` | |
 
+Además, `GlassSurface` acepta `component` (`div` · `header` · `footer` · `section` · `aside` · `nav` · `article`) para
+renderizar un landmark; `AppBar` lo usa para ser un `<header>`.
+
+También llevan personaje, con su propia API: `Button` (`character` asomado), `Switch` y `Slider` (el personaje es el
+pulgar) y `Tabs` (asomado sobre la pestaña activa).
+
 Los personajes son decorativos: quedan ocultos para lectores de pantalla y no reciben eventos de puntero.
 
 ### Cosas a tener en cuenta
@@ -117,6 +144,8 @@ Los personajes son decorativos: quedan ocultos para lectores de pantalla y no re
   Deja espacio alrededor y evita `overflow: hidden` en el contenedor padre.
 - `backdrop-filter` deja de ver lo que hay detrás si un ancestro tiene `opacity < 1`, `filter` o `transform` animado
   con opacidad. Para animar la entrada de una superficie glass, anima `transform`, no `opacity`.
+- En `AppBar` el personaje `peek` sale por encima del borde superior: con `position="sticky"`/`"fixed"` y `floating`
+  (por defecto) la barra deja 64px arriba para la cabeza; con `floating={false}` (barra pegada al borde) no lo uses.
 - La variante `silhouette` mide el panel con `ResizeObserver`; en el primer render (y en SSR) se muestra el panel
   redondeado normal y la silueta aparece al hidratar.
 
@@ -128,3 +157,10 @@ Los personajes son decorativos: quedan ocultos para lectores de pantalla y no re
 
 Las formas de `silhouette()` deben ser trazados cerrados en sentido horario (usa el `Pen`), porque se unen con el
 rectángulo del panel mediante la regla de relleno non-zero.
+
+## Versionado y publicación
+
+- [Semver](https://semver.org/): `0.x` mientras la API cambie. Cada versión se anota en [CHANGELOG.md](CHANGELOG.md).
+- `pnpm publish` ejecuta antes `prepublishOnly` (typecheck, tests y build), así que no se puede publicar un paquete roto.
+- CI (`.github/workflows/ci.yml`) corre typecheck, tests, build y Storybook en cada PR, y en `main` despliega Storybook
+  en GitHub Pages (actívalo en *Settings → Pages → Source: GitHub Actions*).

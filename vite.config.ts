@@ -2,13 +2,28 @@
 import { fileURLToPath } from 'node:url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
+import type { Plugin } from 'vite';
 import dts from 'vite-plugin-dts';
 
 const src = (path: string) => fileURLToPath(new URL(`./src/${path}`, import.meta.url));
 
+/**
+ * The package is `type: module`, so Rolldown wraps CommonJS imports with Node semantics in the CJS build
+ * (`__toESM(mod, 1)`: default = the whole `module.exports`). Emotion's CJS builds export `{ __esModule, default }`,
+ * which then breaks `styled.div` under `require()`. Dropping the Node-mode flag makes `default` honour `__esModule`.
+ */
+const cjsInterop = (): Plugin => ({
+  name: 'mochi:cjs-interop',
+  renderChunk(code, _chunk, options) {
+    if (options.format !== 'cjs') return null;
+    return { code: code.replace(/\.__toESM\(([\w$]+),\s*1\)/g, '.__toESM($1)'), map: null };
+  },
+});
+
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
+    cjsInterop(),
     // Type declarations are only needed for the library bundle.
     ...(mode === 'production' && !process.env.STORYBOOK
       ? [
@@ -33,10 +48,14 @@ export default defineConfig(({ mode }) => ({
       entry: src('index.ts'),
       name: 'MochiUI',
       formats: ['es', 'cjs'],
-      fileName: 'mochi-ui',
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react/jsx-runtime', '@emotion/react', '@emotion/styled'],
+      external: [/^react($|\/)/, /^react-dom($|\/)/, /^@emotion\//],
+      // One file per source module: with `sideEffects: false`, consumers' bundlers drop the components they don't import.
+      output: [
+        { format: 'es', preserveModules: true, preserveModulesRoot: 'src', entryFileNames: '[name].js' },
+        { format: 'cjs', preserveModules: true, preserveModulesRoot: 'src', entryFileNames: '[name].cjs', exports: 'named' },
+      ],
     },
   },
   test: {
@@ -44,5 +63,7 @@ export default defineConfig(({ mode }) => ({
     environment: 'jsdom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
+    // Reuses one jsdom per worker instead of one per file (keeps per-file isolation).
+    pool: 'vmThreads',
   },
 }));
